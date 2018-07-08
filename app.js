@@ -7,6 +7,34 @@ var logger = require('morgan');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
+var passport = require('passport');
+var LocalStrategy = require('passport-local').Strategy;
+
+var session      = require('express-session');
+// Body parser
+var bodyParser = require('body-parser');
+
+//passport 
+
+passport.use(new LocalStrategy(
+  function(username, onSuccess,onError) {
+    console.log('local strategy called with: %s', username);
+    return onSuccess(null, {name: username});
+  }));
+
+
+
+
+passport.serializeUser(function(user, cb) {
+  cb(null, user.id);
+});
+
+passport.deserializeUser(function(id, cb) {
+    cb(null, user);
+  });
+
+
+
 var app = express();
 
 // view engine setup
@@ -18,6 +46,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+
+app.use(session({ secret: 'seiyaistheboss' })); // session secret
+// Initialize Passport and restore authentication state, if any, from the
+// session.
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.use(bodyParser.urlencoded({ extended: false })) // parse application/x-www-form-urlencoded
+app.use(bodyParser.json()) // parse application/json
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
